@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.venv/
+agent-routing-venv/
+.env
+*.log

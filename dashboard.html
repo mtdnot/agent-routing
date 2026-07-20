@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DNS型エージェントルーティング - ダッシュボード</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0f0f1a;color:#e0e0e0;font-family:'Segoe UI',system-ui,sans-serif;padding:24px;min-height:100vh}
+h1{font-size:1.6rem;margin-bottom:4px;color:#7c9aff}
+.subtitle{color:#888;font-size:0.85rem;margin-bottom:24px}
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+
+.card{background:#1a1a2e;border-radius:12px;padding:16px;border:1px solid #2a2a4a}
+.card h2{font-size:1rem;color:#7c9aff;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #2a2a4a}
+
+.agent-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.agent-card{background:#16213e;border-radius:8px;padding:12px;border:1px solid #2a2a4a}
+.agent-card h3{font-size:0.9rem;color:#ffd700;margin-bottom:6px}
+.agent-card .status{font-size:0.8rem;margin:2px 0}
+.agent-card .status.online{color:#4ade80}
+.agent-card .status.offline{color:#ff6b6b}
+.agent-card .section-title{font-size:0.75rem;color:#888;margin-top:8px;margin-bottom:4px}
+.agent-card .routing-entry{font-size:0.75rem;padding:2px 6px;background:#0f0f1a;border-radius:4px;margin:2px 0;display:flex;justify-content:space-between}
+.agent-card .routing-entry .conf{color:#ffd700;font-weight:bold}
+.agent-card .routing-entry .target{color:#4ade80}
+.agent-card .routing-entry .prefix{color:#888}
+.agent-card .capa-tag{display:inline-block;font-size:0.7rem;padding:1px 6px;background:#2a2a4a;border-radius:4px;margin:1px 2px;color:#aaa}
+
+.query-box{display:flex;gap:8px;margin-bottom:12px}
+.query-box input{flex:1;padding:10px 14px;border-radius:8px;border:1px solid #3a3a5a;background:#16213e;color:#fff;font-size:0.95rem}
+.query-box input::placeholder{color:#666}
+.query-box input:focus{outline:none;border-color:#7c9aff}
+.query-box button{padding:10px 24px;border-radius:8px;border:none;background:#7c9aff;color:#fff;font-weight:600;cursor:pointer;font-size:0.95rem}
+.query-box button:hover{background:#6b8aee}
+.query-box button:disabled{opacity:0.4;cursor:not-allowed}
+
+#response-area{margin-top:12px}
+#response-area .resp-card{background:#16213e;border-radius:8px;padding:12px;border:1px solid #2a2a4a;margin-top:8px}
+#response-area .resp-card .label{font-size:0.75rem;color:#888;margin-bottom:4px}
+#response-area .resp-card .text{font-size:0.9rem;padding:8px;background:#0f0f1a;border-radius:6px;margin:4px 0;line-height:1.5}
+#response-area .resp-card .provenance{font-size:0.8rem;color:#aaa;margin-top:6px}
+#response-area .resp-card .provenance .step{display:inline-block;padding:2px 8px;border-radius:4px;margin:2px;font-size:0.75rem}
+#response-area .resp-card .provenance .step.request{background:#2a2a4a;color:#888}
+#response-area .resp-card .provenance .step.forward{background:#3a2a4a;color:#b8a0ff}
+#response-area .resp-card .provenance .step.author{background:#1a4a2a;color:#4ade80}
+.empty-state{color:#555;font-size:0.85rem;text-align:center;padding:24px}
+
+.network-container{text-align:center}
+.network-container svg{width:100%;max-width:500px;height:auto}
+.node-online{fill:#4ade80}
+.node-offline{fill:#ff6b6b}
+.node-label{fill:#fff;font-size:12px;text-anchor:middle;dominant-baseline:central}
+.edge-line{stroke:#3a3a5a;stroke-width:2}
+.edge-query{stroke:#7c9aff;stroke-width:2;stroke-dasharray:6,4;opacity:0.7}
+.edge-label{fill:#888;font-size:9px;text-anchor:middle}
+
+.control-bar{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+.control-bar .pill{display:inline-block;padding:4px 12px;border-radius:20px;font-size:0.75rem;background:#2a2a4a;color:#aaa}
+.control-bar .pill.online{background:#1a4a2a;color:#4ade80}
+.refresh-btn{background:none;border:1px solid #3a3a5a;border-radius:6px;color:#888;padding:4px 12px;cursor:pointer;font-size:0.8rem}
+.refresh-btn:hover{border-color:#7c9aff;color:#7c9aff}
+</style>
+</head>
+<body>
+
+<h1>🕸️ DNS型エージェントルーティング</h1>
+<p class="subtitle">完全分散P2P方式 — 各エージェントがぼんやりと「誰が何を知っているか」を把握し、周りに聞いて解決する</p>
+
+<div class="layout">
+  <!-- Left: Network + Agents -->
+  <div>
+    <div class="card" style="margin-bottom:20px">
+      <div class="control-bar">
+        <h2 style="margin:0;padding:0;border:none">ネットワーク</h2>
+        <span class="pill online" id="agent-count">0/3 オンライン</span>
+        <button class="refresh-btn" onclick="refreshAll()">🔄 更新</button>
+      </div>
+      <div class="network-container" id="network-graph"></div>
+    </div>
+
+    <div class="agent-grid" id="agent-cards"></div>
+  </div>
+
+  <!-- Right: Query -->
+  <div>
+    <div class="card" style="margin-bottom:20px">
+      <h2>🔍 クエリ発行</h2>
+      <div class="query-box">
+        <input type="text" id="query-input" placeholder="例: knowledge/kuma/secrets/meeting_20260720" list="query-suggestions">
+        <datalist id="query-suggestions">
+          <option value="knowledge/kuma/secrets/meeting_20260720">
+          <option value="knowledge/secrets/password">
+          <option value="knowledge/common/greeting">
+          <option value="knowledge/mtdnot/research">
+        </datalist>
+        <button id="query-btn" onclick="sendQuery()">送信</button>
+      </div>
+      <div id="response-area"><div class="empty-state">クエリを送信すると結果が表示されます</div></div>
+    </div>
+
+    <div class="card">
+      <h2>📋 ネットワーク状態</h2>
+      <pre id="network-state" style="font-size:0.75rem;color:#888;max-height:200px;overflow:auto;padding:8px;background:#0f0f1a;border-radius:6px">読み込み中...</pre>
+    </div>
+  </div>
+</div>
+
+<script>
+const AGENTS = [
+  { id: 'A', port: 8001 },
+  { id: 'B', port: 8002 },
+  { id: 'C', port: 8003 },
+];
+
+let agentData = {};
+
+async function fetchAgent(agent) {
+  try {
+    const resp = await fetch(`http://127.0.0.1:${agent.port}/health`);
+    if (!resp.ok) return null;
+    return await resp.json();
+  } catch { return null; }
+}
+
+async function refreshAll() {
+  for (const a of AGENTS) {
+    const data = await fetchAgent(a);
+    agentData[a.id] = data;
+  }
+  renderCards();
+  renderGraph();
+  renderState();
+  updateAgentCount();
+}
+
+function renderCards() {
+  const container = document.getElementById('agent-cards');
+  container.innerHTML = '';
+  for (const a of AGENTS) {
+    const data = agentData[a.id];
+    const card = document.createElement('div');
+    card.className = 'agent-card';
+    
+    if (data) {
+      card.innerHTML = `
+        <h3>エージェント${a.id} <span class="status online">● online</span></h3>
+        <div class="section-title">Capabilities</div>
+        ${data.capabilities.map(c => `<span class="capa-tag">${c}</span>`).join('') || '<span class="capa-tag" style="color:#555">なし</span>'}
+        <div class="section-title">知り合い</div>
+        <div style="font-size:0.8rem;color:#aaa">${(data.acquaintances||[]).join(', ') || 'なし'}</div>
+        <div class="section-title">Routing Table</div>
+        ${data.routing_table && Object.keys(data.routing_table).length > 0
+          ? Object.entries(data.routing_table).slice(0,4).map(([prefix, entry]) => `
+            <div class="routing-entry">
+              <span class="prefix">${prefix.length > 25 ? prefix.slice(0,22)+'...' : prefix}</span>
+              <span>→ <span class="target">${entry.target}</span></span>
+              <span class="conf">${entry.confidence.toFixed(3)}</span>
+            </div>
+          `).join('')
+          : '<div style="font-size:0.75rem;color:#555">空（何も知らない）</div>'
+        }
+        <div class="section-title">Knowledge</div>
+        <div style="font-size:0.75rem;color:#aaa">${(data.knowledge||[]).join(', ') || 'なし'}</div>
+      `;
+    } else {
+      card.innerHTML = `<h3>エージェント${a.id} <span class="status offline">● offline</span></h3>`;
+    }
+    container.appendChild(card);
+  }
+}
+
+function renderGraph() {
+  const container = document.getElementById('network-graph');
+  const W = 420, H = 220;
+  
+  const positions = {
+    'A': { x: 210, y: 30 },
+    'B': { x: 210, y: 100 },
+    'C': { x: 210, y: 170 },
+  };
+  
+  const edges = [
+    { from: 'A', to: 'B', label: '知り合い', style: 'edge-line' },
+    { from: 'B', to: 'C', label: '知り合い', style: 'edge-line' },
+  ];
+  
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  svg += `<defs><marker id="arrow" viewBox="0 0 10 10" refX="25" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#3a3a5a"/></marker></defs>`;
+  
+  // Edges
+  for (const e of edges) {
+    const f = positions[e.from], t = positions[e.to];
+    if (!f || !t) continue;
+    svg += `<line x1="${f.x}" y1="${f.y+15}" x2="${t.x}" y2="${t.y-15}" class="${e.style}" marker-end="url(#arrow)"/>`;
+    if (e.label) {
+      const my = (f.y + t.y) / 2;
+      svg += `<text x="${f.x+15}" y="${my}" class="edge-label">${e.label}</text>`;
+    }
+  }
+  
+  // Nodes
+  for (const a of AGENTS) {
+    const pos = positions[a.id];
+    if (!pos) continue;
+    const data = agentData[a.id];
+    const online = data !== null && data !== undefined;
+    svg += `<circle cx="${pos.x}" cy="${pos.y}" r="14" class="${online ? 'node-online' : 'node-offline'}" opacity="0.9"/>`;
+    svg += `<text x="${pos.x}" y="${pos.y}" class="node-label">${a.id}</text>`;
+  }
+  
+  svg += '</svg>';
+  container.innerHTML = svg;
+}
+
+function renderState() {
+  const el = document.getElementById('network-state');
+  const state = {};
+  for (const a of AGENTS) {
+    const d = agentData[a.id];
+    if (!d) { state[a.id] = 'offline'; continue; }
+    state[a.id] = {
+      acquaintances: d.acquaintances || [],
+      routing: Object.fromEntries(
+        Object.entries(d.routing_table || {}).map(([k,v]) => [k, {target: v.target, conf: v.confidence.toFixed(3)}])
+      )
+    };
+  }
+  el.textContent = JSON.stringify(state, null, 2);
+}
+
+function updateAgentCount() {
+  const online = AGENTS.filter(a => agentData[a.id] !== null && agentData[a.id] !== undefined).length;
+  document.getElementById('agent-count').textContent = `${online}/${AGENTS.length} オンライン`;
+}
+
+async function sendQuery() {
+  const input = document.getElementById('query-input');
+  const query = input.value.trim();
+  if (!query) return;
+  
+  const btn = document.getElementById('query-btn');
+  btn.disabled = true;
+  btn.textContent = '送信中...';
+  
+  try {
+    const resp = await fetch('http://127.0.0.1:8001/a2a/message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'query',
+        sender: 'A',
+        recipient: 'A',
+        query: query,
+        ttl: 5,
+        provenance: [{"agent":"A","role":"request"}]
+      })
+    });
+    const result = await resp.json();
+    displayResult(query, result);
+    // Auto-refresh routing tables after query
+    setTimeout(refreshAll, 500);
+  } catch(e) {
+    displayResult(query, {type: 'error', text: '通信エラー: ' + e.message});
+  }
+  
+  btn.disabled = false;
+  btn.textContent = '送信';
+}
+
+function displayResult(query, result) {
+  const area = document.getElementById('response-area');
+  
+  const isError = result.type === 'error';
+  const provenance = result.provenance || [];
+  
+  let html = '<div class="resp-card">';
+  html += `<div class="label">クエリ: ${query}</div>`;
+  
+  if (isError) {
+    html += `<div class="text" style="color:#ff6b6b">❌ ${result.text || '不明なエラー'}</div>`;
+  } else {
+    html += `<div class="text">${result.text || '(空の応答)'}</div>`;
+  }
+  
+  if (provenance.length > 0) {
+    html += '<div class="label">経路 (Provenance Chain)</div>';
+    html += '<div class="provenance">';
+    html += provenance.map(p => {
+      const cls = p.role === 'author' ? 'author' : p.role === 'forward' ? 'forward' : 'request';
+      return `<span class="step ${cls}">${p.agent} (${p.role})</span>`;
+    }).join(' → ');
+    html += '</div>';
+  }
+  
+  if (result.confidence) {
+    html += `<div style="margin-top:8px;font-size:0.8rem;color:#aaa">confidence: ${result.confidence}</div>`;
+  }
+  
+  html += '</div>';
+  area.innerHTML = html;
+}
+
+// Init
+refreshAll();
+setInterval(refreshAll, 5000);
+</script>
+</body>
+</html>

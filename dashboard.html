@@ -114,22 +114,31 @@ const AGENTS = [
   { id: 'C', port: 8003 },
 ];
 
-const BASE = `http://${window.location.hostname}`;
+const BASE = '';
+const A_API = window.location.origin;
 
 let agentData = {};
 
 async function fetchAgent(agent) {
   try {
-    const resp = await fetch(`${BASE}:${agent.port}/health`);
+    const resp = await fetch(`${A_API}/api/health/all`);
     if (!resp.ok) return null;
-    return await resp.json();
+    const all = await resp.json();
+    return all[agent.id] || null;
   } catch { return null; }
 }
 
 async function refreshAll() {
-  for (const a of AGENTS) {
-    const data = await fetchAgent(a);
-    agentData[a.id] = data;
+  try {
+    const resp = await fetch(`${A_API}/api/health/all`);
+    if (resp.ok) {
+      const all = await resp.json();
+      for (const a of AGENTS) {
+        agentData[a.id] = all[a.id] || null;
+      }
+    }
+  } catch {
+    for (const a of AGENTS) agentData[a.id] = null;
   }
   renderCards();
   renderGraph();
@@ -247,7 +256,7 @@ async function sendQuery() {
   btn.textContent = '送信中...';
   
   try {
-    const resp = await fetch(`${BASE}:8001/a2a/message`, {
+    const resp = await fetch(`${A_API}/a2a/message`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

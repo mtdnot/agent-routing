@@ -49,9 +49,11 @@ class Agent:
         port: int,
         capabilities: list[dict] | None = None,
         acquaintances: dict[str, str] | None = None,
+        host: str = "127.0.0.1",
     ):
         self.id = agent_id
         self.port = port
+        self.host = host
         self.capabilities = [Capability(**c) for c in (capabilities or [])]
         self.routing_table: dict[str, RoutingEntry] = {}
         self.acquaintances: dict[str, str] = {}
@@ -268,6 +270,6 @@ class Agent:
 
     def run(self):
         log.info(f"Starting agent [{self.id}] on port {self.port}")
-        config = Config(app=self.app, host="127.0.0.1", port=self.port, log_level="error")
+        config = Config(app=self.app, host=self.host, port=self.port, log_level="error")
         server = Server(config)
         server.run()

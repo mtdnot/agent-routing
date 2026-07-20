@@ -8,6 +8,7 @@ from base_agent import Agent
 agent = Agent(
     agent_id="C",
     port=8003,
+    host="0.0.0.0",
     capabilities=[
         {"prefix": "knowledge/kuma/", "type": "authoritative"},
         {"prefix": "knowledge/secrets/", "type": "authoritative"},

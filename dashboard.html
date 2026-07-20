@@ -114,11 +114,13 @@ const AGENTS = [
   { id: 'C', port: 8003 },
 ];
 
+const BASE = `http://${window.location.hostname}`;
+
 let agentData = {};
 
 async function fetchAgent(agent) {
   try {
-    const resp = await fetch(`http://127.0.0.1:${agent.port}/health`);
+    const resp = await fetch(`${BASE}:${agent.port}/health`);
     if (!resp.ok) return null;
     return await resp.json();
   } catch { return null; }
@@ -245,7 +247,7 @@ async function sendQuery() {
   btn.textContent = '送信中...';
   
   try {
-    const resp = await fetch('http://127.0.0.1:8001/a2a/message', {
+    const resp = await fetch(`${BASE}:8001/a2a/message`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

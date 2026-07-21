@@ -11,7 +11,7 @@ agent = Agent(
         {"prefix": "knowledge/kuma/", "type": "authoritative"},
     ],
     acquaintances={"B": "http://127.0.0.1:8002"},
-    llm_model="deepseek-v4-flash",
+    llm_model="qwen3.7-plus",
 )
 
 agent.know("knowledge/kuma/secrets/meeting_20260720",

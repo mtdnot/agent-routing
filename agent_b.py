@@ -11,7 +11,7 @@ agent = Agent(
         {"prefix": "knowledge/general/", "type": "authoritative"},
     ],
     acquaintances={"A": "http://127.0.0.1:8001", "C": "http://127.0.0.1:8003"},
-    llm_model="deepseek-v4-flash",
+    llm_model="qwen3.7-plus",
 )
 
 agent.add_route("knowledge/kuma/", "C", confidence=0.6)

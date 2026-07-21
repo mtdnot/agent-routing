@@ -13,7 +13,7 @@ agent = Agent(
         {"prefix": "knowledge/general/", "type": "authoritative"},
     ],
     acquaintances={"B": "http://127.0.0.1:8002"},
-    llm_model="deepseek-v4-flash",
+    llm_model="qwen3.7-plus",
 )
 
 _script_dir = os.path.dirname(os.path.abspath(__file__))

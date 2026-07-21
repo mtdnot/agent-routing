@@ -3,247 +3,174 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DNS型エージェントルーティング - ダッシュボード</title>
+<title>DNS Agent Routing - Dashboard</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0f0f1a;color:#e0e0e0;font-family:'Segoe UI',system-ui,sans-serif;padding:24px;min-height:100vh}
-h1{font-size:1.6rem;margin-bottom:4px;color:#7c9aff}
-.subtitle{color:#888;font-size:0.85rem;margin-bottom:24px}
-.layout{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-@media(max-width:900px){.layout{grid-template-columns:1fr}}
-
-.card{background:#1a1a2e;border-radius:12px;padding:16px;border:1px solid #2a2a4a}
-.card h2{font-size:1rem;color:#7c9aff;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #2a2a4a}
-
-.agent-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
-.agent-card{background:#16213e;border-radius:8px;padding:12px;border:1px solid #2a2a4a}
-.agent-card h3{font-size:0.9rem;color:#ffd700;margin-bottom:6px}
-.agent-card .status{font-size:0.8rem;margin:2px 0}
-.agent-card .status.online{color:#4ade80}
-.agent-card .status.offline{color:#ff6b6b}
-.agent-card .section-title{font-size:0.75rem;color:#888;margin-top:8px;margin-bottom:4px}
-.agent-card .routing-entry{font-size:0.75rem;padding:2px 6px;background:#0f0f1a;border-radius:4px;margin:2px 0;display:flex;justify-content:space-between}
-.agent-card .routing-entry .conf{color:#ffd700;font-weight:bold}
-.agent-card .routing-entry .target{color:#4ade80}
-.agent-card .routing-entry .prefix{color:#888}
-.agent-card .capa-tag{display:inline-block;font-size:0.7rem;padding:1px 6px;background:#2a2a4a;border-radius:4px;margin:1px 2px;color:#aaa}
-
-.query-box{display:flex;gap:8px;margin-bottom:12px}
-.query-box input{flex:1;padding:10px 14px;border-radius:8px;border:1px solid #3a3a5a;background:#16213e;color:#fff;font-size:0.95rem}
-.query-box input::placeholder{color:#666}
-.query-box input:focus{outline:none;border-color:#7c9aff}
-.query-box button{padding:10px 24px;border-radius:8px;border:none;background:#7c9aff;color:#fff;font-weight:600;cursor:pointer;font-size:0.95rem}
-.query-box button:hover{background:#6b8aee}
-.query-box button:disabled{opacity:0.4;cursor:not-allowed}
-
-#response-area{margin-top:12px}
-#response-area .resp-card{background:#16213e;border-radius:8px;padding:12px;border:1px solid #2a2a4a;margin-top:8px}
-#response-area .resp-card .label{font-size:0.75rem;color:#888;margin-bottom:4px}
-#response-area .resp-card .text{font-size:0.9rem;padding:8px;background:#0f0f1a;border-radius:6px;margin:4px 0;line-height:1.5}
-#response-area .resp-card .provenance{font-size:0.8rem;color:#aaa;margin-top:6px}
-#response-area .resp-card .provenance .step{display:inline-block;padding:2px 8px;border-radius:4px;margin:2px;font-size:0.75rem}
-#response-area .resp-card .provenance .step.request{background:#2a2a4a;color:#888}
-#response-area .resp-card .provenance .step.forward{background:#3a2a4a;color:#b8a0ff}
-#response-area .resp-card .provenance .step.author{background:#1a4a2a;color:#4ade80}
-.empty-state{color:#555;font-size:0.85rem;text-align:center;padding:24px}
-
-.network-container{text-align:center}
-.network-container svg{width:100%;max-width:500px;height:auto}
-.node-online{fill:#4ade80}
-.node-offline{fill:#ff6b6b}
-.node-label{fill:#fff;font-size:12px;text-anchor:middle;dominant-baseline:central}
-.edge-line{stroke:#3a3a5a;stroke-width:2}
-.edge-query{stroke:#7c9aff;stroke-width:2;stroke-dasharray:6,4;opacity:0.7}
-.edge-label{fill:#888;font-size:9px;text-anchor:middle}
-
-.control-bar{display:flex;gap:8px;align-items:center;margin-bottom:12px}
-.control-bar .pill{display:inline-block;padding:4px 12px;border-radius:20px;font-size:0.75rem;background:#2a2a4a;color:#aaa}
-.control-bar .pill.online{background:#1a4a2a;color:#4ade80}
-.refresh-btn{background:none;border:1px solid #3a3a5a;border-radius:6px;color:#888;padding:4px 12px;cursor:pointer;font-size:0.8rem}
-.refresh-btn:hover{border-color:#7c9aff;color:#7c9aff}
+body{background:#0f0f1a;color:#e0e0e0;font-family:'Segoe UI',system-ui,sans-serif;padding:20px;min-height:100vh}
+h1{font-size:1.3rem;margin-bottom:4px;color:#c0c0c0;font-weight:400}
+.subtitle{color:#666;font-size:0.8rem;margin-bottom:16px}
+.panels{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
+@media(max-width:1100px){.panels{grid-template-columns:1fr}}
+.panel{background:#1a1a2e;border-radius:10px;border:1px solid #2a2a4a;display:flex;flex-direction:column;height:500px}
+.panel-header{padding:10px 14px;border-bottom:1px solid #2a2a4a;display:flex;justify-content:space-between;align-items:center}
+.panel-header .name{font-weight:600;font-size:0.95rem;color:#d0d0d0}
+.panel-header .status{font-size:0.75rem;padding:2px 8px;border-radius:10px}
+.status.online{background:#1a4a2a;color:#6ae08a}
+.status.offline{background:#4a1a1a;color:#e06a6a}
+.panel-capabilities{font-size:0.7rem;color:#666;padding:2px 14px;border-bottom:1px solid #1a1a2e}
+.panel-body{flex:1;overflow-y:auto;padding:8px 10px;font-size:0.8rem}
+.panel-body .log-entry{padding:4px 0;border-bottom:1px solid #1a1a2e;line-height:1.4}
+.log-entry .time{color:#555;font-size:0.7rem}
+.log-entry .action{display:inline-block;padding:0 6px;border-radius:3px;font-size:0.7rem;font-weight:600;margin:0 4px}
+.action.KNOWLEDGE_HIT{background:#1a3a2a;color:#6ae08a}
+.action.LLM_CALL,.action.LLM_RESPONSE{background:#2a2a4a;color:#8a8aff}
+.action.ROUTED{background:#3a2a1a;color:#e0b06a}
+.action.BROADCAST_OK{background:#1a2a3a;color:#6aafe0}
+.action.NOT_FOUND,.action.TTL_EXPIRED{background:#4a1a1a;color:#e06a6a}
+.log-entry .detail{color:#aaa;font-size:0.75rem}
+.log-entry .query-text{color:#888;font-size:0.75rem}
+.panel-footer{font-size:0.7rem;padding:6px 14px;border-top:1px solid #2a2a4a;color:#666;max-height:80px;overflow-y:auto}
+.panel-footer .rt-entry{display:flex;justify-content:space-between;padding:1px 0}
+.panel-footer .rt-entry .rt-prefix{color:#888}
+.panel-footer .rt-entry .rt-target{color:#6ae08a}
+.panel-footer .rt-entry .rt-conf{color:#e0b06a}
+.query-bar{display:flex;gap:8px;margin-bottom:16px}
+.query-bar input{flex:1;padding:10px 14px;border-radius:8px;border:1px solid #3a3a5a;background:#1a1a2e;color:#e0e0e0;font-size:0.95rem}
+.query-bar input::placeholder{color:#555}
+.query-bar input:focus{outline:none;border-color:#6a8aff}
+.query-bar button{padding:10px 24px;border-radius:8px;border:none;background:#3a4a7a;color:#e0e0e0;cursor:pointer;font-size:0.9rem}
+.query-bar button:hover{background:#4a5a8a}
+.query-bar button:disabled{opacity:0.3;cursor:not-allowed}
+#response-box{margin-bottom:16px}
+#response-box .resp-text{background:#1a1a2e;border:1px solid #2a4a2a;border-radius:8px;padding:12px;font-size:0.9rem;line-height:1.5;color:#c0e0c0}
+#response-box .resp-meta{font-size:0.75rem;color:#666;margin-top:6px}
+#response-box .resp-route{font-size:0.8rem;color:#888;margin-top:4px}
+#response-box .resp-route .step{display:inline-block;padding:1px 6px;border-radius:3px;margin:1px;font-size:0.7rem}
+.resp-route .step.request{background:#2a2a4a;color:#888}
+.resp-route .step.forward{background:#3a2a4a;color:#b8a0ff}
+.resp-route .step.author{background:#1a3a2a;color:#6ae08a}
+.empty-state{color:#444;font-size:0.8rem;text-align:center;padding:20px}
+.network-bar{display:flex;gap:6px;font-size:0.75rem;margin-bottom:12px;color:#888}
+.network-bar .node{display:flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;background:#1a1a2e;border:1px solid #2a2a4a}
+.network-bar .node .dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.dot.on{background:#6ae08a}.dot.off{background:#e06a6a}
 </style>
 </head>
 <body>
 
-<h1>🕸️ DNS型エージェントルーティング</h1>
-<p class="subtitle">完全分散P2P方式 — 各エージェントがぼんやりと「誰が何を知っているか」を把握し、周りに聞いて解決する</p>
+<h1>DNS Agent Routing</h1>
+<p class="subtitle">三位一体 完全分散P2P エージェントルーティング検証</p>
 
-<div class="layout">
-  <!-- Left: Network + Agents -->
-  <div>
-    <div class="card" style="margin-bottom:20px">
-      <div class="control-bar">
-        <h2 style="margin:0;padding:0;border:none">ネットワーク</h2>
-        <span class="pill online" id="agent-count">0/3 オンライン</span>
-        <button class="refresh-btn" onclick="refreshAll()">🔄 更新</button>
-      </div>
-      <div class="network-container" id="network-graph"></div>
-    </div>
+<div class="network-bar" id="network-bar"></div>
 
-    <div class="agent-grid" id="agent-cards"></div>
-  </div>
-
-  <!-- Right: Query -->
-  <div>
-    <div class="card" style="margin-bottom:20px">
-      <h2>🔍 クエリ発行</h2>
-      <div class="query-box">
-        <input type="text" id="query-input" placeholder="例: knowledge/kuma/secrets/meeting_20260720" list="query-suggestions">
-        <datalist id="query-suggestions">
-          <option value="knowledge/kuma/secrets/meeting_20260720">
-          <option value="knowledge/secrets/password">
-          <option value="knowledge/common/greeting">
-          <option value="knowledge/mtdnot/research">
-        </datalist>
-        <button id="query-btn" onclick="sendQuery()">送信</button>
-      </div>
-      <div id="response-area"><div class="empty-state">クエリを送信すると結果が表示されます</div></div>
-    </div>
-
-    <div class="card">
-      <h2>📋 ネットワーク状態</h2>
-      <pre id="network-state" style="font-size:0.75rem;color:#888;max-height:200px;overflow:auto;padding:8px;background:#0f0f1a;border-radius:6px">読み込み中...</pre>
-    </div>
-  </div>
+<div class="query-bar">
+  <input type="text" id="query-input" placeholder="例: knowledge/kuma/secrets/meeting_20260720" list="suggestions">
+  <datalist id="suggestions">
+    <option value="knowledge/kuma/secrets/meeting_20260720">
+    <option value="knowledge/secrets/password">
+    <option value="knowledge/common/greeting">
+    <option value="knowledge/general/what is dns">
+  </datalist>
+  <button id="query-btn" onclick="sendQuery()">送信</button>
 </div>
+
+<div id="response-box"></div>
+
+<div class="panels" id="panels"></div>
 
 <script>
 const AGENTS = [
-  { id: 'A', port: 8001 },
-  { id: 'B', port: 8002 },
-  { id: 'C', port: 8003 },
+  { id: 'A', port: 8001, color: '#6a8aff', caps: ['knowledge/mtdnot/', 'knowledge/general/'] },
+  { id: 'B', port: 8002, color: '#e0b06a', caps: ['knowledge/common/', 'knowledge/general/'] },
+  { id: 'C', port: 8003, color: '#6ae08a', caps: ['knowledge/secrets/', 'knowledge/kuma/'] },
 ];
 
-const BASE = '';
 const A_API = window.location.origin;
-
 let agentData = {};
-
-async function fetchAgent(agent) {
-  try {
-    const resp = await fetch(`${A_API}/api/health/all`);
-    if (!resp.ok) return null;
-    const all = await resp.json();
-    return all[agent.id] || null;
-  } catch { return null; }
-}
 
 async function refreshAll() {
   try {
-    const resp = await fetch(`${A_API}/api/health/all`);
+    const resp = await fetch(A_API + '/api/health/all');
     if (resp.ok) {
       const all = await resp.json();
-      for (const a of AGENTS) {
-        agentData[a.id] = all[a.id] || null;
-      }
+      for (const a of AGENTS) agentData[a.id] = all[a.id] || null;
     }
-  } catch {
-    for (const a of AGENTS) agentData[a.id] = null;
-  }
-  renderCards();
-  renderGraph();
-  renderState();
-  updateAgentCount();
+  } catch { for (const a of AGENTS) agentData[a.id] = null; }
+  renderPanels();
+  renderNetworkBar();
 }
 
-function renderCards() {
-  const container = document.getElementById('agent-cards');
-  container.innerHTML = '';
-  for (const a of AGENTS) {
-    const data = agentData[a.id];
-    const card = document.createElement('div');
-    card.className = 'agent-card';
-    
-    if (data) {
-      card.innerHTML = `
-        <h3>エージェント${a.id} <span class="status online">● online</span></h3>
-        <div class="section-title">Capabilities</div>
-        ${data.capabilities.map(c => `<span class="capa-tag">${c}</span>`).join('') || '<span class="capa-tag" style="color:#555">なし</span>'}
-        <div class="section-title">知り合い</div>
-        <div style="font-size:0.8rem;color:#aaa">${(data.acquaintances||[]).join(', ') || 'なし'}</div>
-        <div class="section-title">Routing Table</div>
-        ${data.routing_table && Object.keys(data.routing_table).length > 0
-          ? Object.entries(data.routing_table).slice(0,4).map(([prefix, entry]) => `
-            <div class="routing-entry">
-              <span class="prefix">${prefix.length > 25 ? prefix.slice(0,22)+'...' : prefix}</span>
-              <span>→ <span class="target">${entry.target}</span></span>
-              <span class="conf">${entry.confidence.toFixed(3)}</span>
-            </div>
-          `).join('')
-          : '<div style="font-size:0.75rem;color:#555">空（何も知らない）</div>'
-        }
-        <div class="section-title">Knowledge</div>
-        <div style="font-size:0.75rem;color:#aaa">${(data.knowledge||[]).join(', ') || 'なし'}</div>
-      `;
-    } else {
-      card.innerHTML = `<h3>エージェント${a.id} <span class="status offline">● offline</span></h3>`;
-    }
-    container.appendChild(card);
-  }
-}
-
-function renderGraph() {
-  const container = document.getElementById('network-graph');
-  const W = 420, H = 220;
-  
-  const positions = {
-    'A': { x: 210, y: 30 },
-    'B': { x: 210, y: 100 },
-    'C': { x: 210, y: 170 },
-  };
-  
-  const edges = [
-    { from: 'A', to: 'B', label: '知り合い', style: 'edge-line' },
-    { from: 'B', to: 'C', label: '知り合い', style: 'edge-line' },
-  ];
-  
-  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
-  svg += `<defs><marker id="arrow" viewBox="0 0 10 10" refX="25" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#3a3a5a"/></marker></defs>`;
-  
-  // Edges
-  for (const e of edges) {
-    const f = positions[e.from], t = positions[e.to];
-    if (!f || !t) continue;
-    svg += `<line x1="${f.x}" y1="${f.y+15}" x2="${t.x}" y2="${t.y-15}" class="${e.style}" marker-end="url(#arrow)"/>`;
-    if (e.label) {
-      const my = (f.y + t.y) / 2;
-      svg += `<text x="${f.x+15}" y="${my}" class="edge-label">${e.label}</text>`;
-    }
-  }
-  
-  // Nodes
-  for (const a of AGENTS) {
-    const pos = positions[a.id];
-    if (!pos) continue;
-    const data = agentData[a.id];
-    const online = data !== null && data !== undefined;
-    svg += `<circle cx="${pos.x}" cy="${pos.y}" r="14" class="${online ? 'node-online' : 'node-offline'}" opacity="0.9"/>`;
-    svg += `<text x="${pos.x}" y="${pos.y}" class="node-label">${a.id}</text>`;
-  }
-  
-  svg += '</svg>';
-  container.innerHTML = svg;
-}
-
-function renderState() {
-  const el = document.getElementById('network-state');
-  const state = {};
-  for (const a of AGENTS) {
+function renderNetworkBar() {
+  const bar = document.getElementById('network-bar');
+  bar.innerHTML = AGENTS.map(a => {
     const d = agentData[a.id];
-    if (!d) { state[a.id] = 'offline'; continue; }
-    state[a.id] = {
-      acquaintances: d.acquaintances || [],
-      routing: Object.fromEntries(
-        Object.entries(d.routing_table || {}).map(([k,v]) => [k, {target: v.target, conf: v.confidence.toFixed(3)}])
-      )
-    };
-  }
-  el.textContent = JSON.stringify(state, null, 2);
+    const on = d !== null && d !== undefined;
+    return `<span class="node"><span class="dot ${on ? 'on' : 'off'}"></span>${a.id}${on ? ' (' + (d.acquaintances||[]).join(',') + ')' : ' offline'}</span>`;
+  }).join(' ');
 }
 
-function updateAgentCount() {
-  const online = AGENTS.filter(a => agentData[a.id] !== null && agentData[a.id] !== undefined).length;
-  document.getElementById('agent-count').textContent = `${online}/${AGENTS.length} オンライン`;
+function renderPanels() {
+  const container = document.getElementById('panels');
+  container.innerHTML = AGENTS.map(a => {
+    const d = agentData[a.id];
+    const on = d !== null && d !== undefined;
+    
+    let logHtml = '<div class="empty-state">クエリを送信するとここに処理履歴が表示されます</div>';
+    let routingHtml = '';
+    let capsHtml = '';
+    
+    if (on) {
+      capsHtml = a.caps.join(' ');
+      if (d.routing_table && Object.keys(d.routing_table).length > 0) {
+        routingHtml = Object.entries(d.routing_table).slice(0,3).map(([p, e]) =>
+          `<div class="rt-entry"><span class="rt-prefix">${p.length>22?p.slice(0,20)+'..':p}</span><span class="rt-target">${e.target}</span><span class="rt-conf">${e.confidence.toFixed(3)}</span></div>`
+        ).join('');
+      } else {
+        routingHtml = '<div style="color:#555">(empty)</div>';
+      }
+      
+      // fetch query_log for this agent
+      fetch(A_API + '/api/trace/all').then(r => r.json()).then(data => {
+        const log = (data[a.id] && data[a.id].log) || [];
+        updateAgentLog(a.id, log);
+      }).catch(() => {});
+    }
+    
+    return `
+      <div class="panel" id="panel-${a.id}" style="border-color:${a.color}44">
+        <div class="panel-header">
+          <span class="name" style="color:${a.color}">Agent ${a.id}</span>
+          <span class="status ${on ? 'online' : 'offline'}">${on ? 'online' : 'offline'}</span>
+        </div>
+        <div class="panel-capabilities">${on ? capsHtml : '-'}</div>
+        <div class="panel-body" id="log-${a.id}">
+          <div class="empty-state">クエリを送信するとここに処理履歴が表示されます</div>
+        </div>
+        <div class="panel-footer">
+          <div style="font-size:0.7rem;color:#888;margin-bottom:2px">routing table:</div>
+          ${routingHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function updateAgentLog(agentId, log) {
+  const el = document.getElementById('log-' + agentId);
+  if (!el) return;
+  if (!log || log.length === 0) {
+    el.innerHTML = '<div class="empty-state">処理履歴なし</div>';
+    return;
+  }
+  el.innerHTML = log.map(e => {
+    const act = (e.action || '').replace(/[^a-zA-Z0-9_]/g, '');
+    return `<div class="log-entry">
+      <span class="time">${e.time || ''}</span>
+      <span class="action ${act}">${e.action || ''}</span>
+      <span class="detail">${e.detail || ''}</span>
+      <div class="query-text">${(e.query || '').length > 40 ? (e.query || '').slice(0,38)+'..' : (e.query || '')}</div>
+    </div>`;
+  }).join('');
 }
 
 async function sendQuery() {
@@ -252,68 +179,60 @@ async function sendQuery() {
   if (!query) return;
   
   const btn = document.getElementById('query-btn');
-  btn.disabled = true;
-  btn.textContent = '送信中...';
+  btn.disabled = true; btn.textContent = '送信中...';
+  document.getElementById('response-box').innerHTML = '';
   
   try {
-    const resp = await fetch(`${A_API}/a2a/message`, {
+    const resp = await fetch(A_API + '/a2a/message', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: 'query',
-        sender: 'A',
-        recipient: 'A',
-        query: query,
-        ttl: 5,
-        provenance: [{"agent":"A","role":"request"}]
-      })
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({type:'query',sender:'A',recipient:'A',query,ttl:5,
+        provenance:[{"agent":"A","role":"request"}]})
     });
     const result = await resp.json();
-    displayResult(query, result);
-    // Auto-refresh routing tables after query
-    setTimeout(refreshAll, 500);
+    displayResponse(query, result);
+    // fetch trace from all agents
+    setTimeout(() => refreshTrace(), 300);
   } catch(e) {
-    displayResult(query, {type: 'error', text: '通信エラー: ' + e.message});
+    document.getElementById('response-box').innerHTML =
+      '<div class="resp-text" style="border-color:#4a2a2a;color:#e06a6a">通信エラー: ' + e.message + '</div>';
   }
   
-  btn.disabled = false;
-  btn.textContent = '送信';
+  btn.disabled = false; btn.textContent = '送信';
 }
 
-function displayResult(query, result) {
-  const area = document.getElementById('response-area');
-  
+function refreshTrace() {
+  fetch(A_API + '/api/trace/all').then(r => r.json()).then(data => {
+    for (const a of AGENTS) {
+      const log = (data[a.id] && data[a.id].log) || [];
+      updateAgentLog(a.id, log);
+    }
+  }).catch(() => {});
+  refreshAll();
+}
+
+function displayResponse(query, result) {
+  const box = document.getElementById('response-box');
   const isError = result.type === 'error';
   const provenance = result.provenance || [];
   
-  let html = '<div class="resp-card">';
-  html += `<div class="label">クエリ: ${query}</div>`;
-  
-  if (isError) {
-    html += `<div class="text" style="color:#ff6b6b">❌ ${result.text || '不明なエラー'}</div>`;
-  } else {
-    html += `<div class="text">${result.text || '(空の応答)'}</div>`;
-  }
-  
+  let routeHtml = '';
   if (provenance.length > 0) {
-    html += '<div class="label">経路 (Provenance Chain)</div>';
-    html += '<div class="provenance">';
-    html += provenance.map(p => {
+    routeHtml = provenance.map(p => {
       const cls = p.role === 'author' ? 'author' : p.role === 'forward' ? 'forward' : 'request';
-      return `<span class="step ${cls}">${p.agent} (${p.role})</span>`;
+      return `<span class="step ${cls}">${p.agent}(${p.role})</span>`;
     }).join(' → ');
-    html += '</div>';
   }
   
-  if (result.confidence) {
-    html += `<div style="margin-top:8px;font-size:0.8rem;color:#aaa">confidence: ${result.confidence}</div>`;
-  }
-  
-  html += '</div>';
-  area.innerHTML = html;
+  box.innerHTML = `
+    <div class="resp-text" style="border-color:${isError ? '#4a2a2a' : '#2a4a2a'}">
+      ${isError ? '' : ''} ${result.text || '(empty)'}
+    </div>
+    <div class="resp-route">${routeHtml}</div>
+    <div class="resp-meta">query: ${query}</div>
+  `;
 }
 
-// Init
 refreshAll();
 setInterval(refreshAll, 5000);
 </script>

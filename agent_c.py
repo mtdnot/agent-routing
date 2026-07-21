@@ -18,5 +18,8 @@ agent.know("knowledge/kuma/secrets/meeting_20260720",
     "2026年7月20日MTG。議題: DNS型エージェントルーティングの検証設計。"
     "結論: Supernodeなしの完全分散P2P方式で進める。次回: 7/27 10:00")
 
+agent.know("knowledge/secrets/password",
+    "ルーターのパスワードは Cyc1eTr33_2026")
+
 print(f"C起動 (knowledge: {list(agent.knowledge.keys())}, capabilities: {[c.prefix for c in agent.capabilities]})")
 agent.run()

@@ -126,6 +126,7 @@ class Agent:
                 }],
                 max_tokens=300,
                 temperature=0.7,
+                timeout=40,
             )
             return resp.choices[0].message.content.strip()
         except Exception as e:
@@ -162,7 +163,7 @@ class Agent:
             fm.ttl -= 1; fm.provenance = msg.provenance + [{"agent": self.id, "role": "forward"}]
             fm.recipient = entry.target; fm.sender = self.id
             try:
-                resp = httpx.post(f"{target_url}/a2a/message", json=fm.model_dump(), timeout=15.0)
+                resp = httpx.post(f"{target_url}/a2a/message", json=fm.model_dump(), timeout=45.0)
                 if resp.status_code == 200:
                     result = resp.json()
                     if result.get("type") == "response":
@@ -184,7 +185,7 @@ class Agent:
             fm.ttl = msg.ttl - 1; fm.provenance = msg.provenance + [{"agent": self.id, "role": "forward"}]
             fm.recipient = name; fm.sender = self.id; fm.type = "forward"
             try:
-                resp = httpx.post(f"{url}/a2a/message", json=fm.model_dump(), timeout=15.0)
+                resp = httpx.post(f"{url}/a2a/message", json=fm.model_dump(), timeout=45.0)
                 if resp.status_code == 200:
                     result = resp.json()
                     if result.get("type") == "response":

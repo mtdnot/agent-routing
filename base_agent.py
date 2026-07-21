@@ -168,7 +168,7 @@ class Agent:
                     result = resp.json()
                     if result.get("type") == "response":
                         self.update_confidence(msg.query, True, target=entry.target)
-                        self._log_query(msg.query, "ROUTED", f"→ {entry.target} (conf={entry.confidence:.2f})", result.get("text","")[:60])
+                        self._log_query(msg.query, "ROUTED", f"→ {entry.target} (conf={entry.confidence:.2f})", f"from {entry.target}: {result.get('text','')[:80]}")
                         return {"type": "response", "sender": entry.target, "text": result.get("text",""),
                                 "provenance": result.get("provenance",[]), "query": msg.query}
                     self.update_confidence(msg.query, False, target=entry.target)
@@ -190,7 +190,7 @@ class Agent:
                     result = resp.json()
                     if result.get("type") == "response":
                         self.update_confidence(msg.query, True, target=name)
-                        self._log_query(msg.query, "BROADCAST_OK", f"via {name}", result.get("text","")[:60])
+                        self._log_query(msg.query, "BROADCAST_OK", f"via {name}", f"from {name}: {result.get('text','')[:80]}")
                         return {"type": "response", "sender": name, "text": result.get("text",""),
                                 "provenance": result.get("provenance",[]), "query": msg.query}
             except Exception:

@@ -75,7 +75,7 @@ class Agent:
             "query": query[:60],
             "action": action,
             "detail": detail[:80],
-            "result": result[:150],
+            "result": result[:300],
         })
         self.query_log = self.query_log[:50]
 

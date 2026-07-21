@@ -29,6 +29,7 @@ h1{font-size:1.3rem;margin-bottom:4px;color:#c0c0c0;font-weight:400}
 .action.NOT_FOUND,.action.TTL_EXPIRED{background:#4a1a1a;color:#e06a6a}
 .log-entry .detail{color:#aaa;font-size:0.75rem}
 .log-entry .query-text{color:#888;font-size:0.75rem}
+.log-entry .log-result{color:#8ac;font-size:0.7rem;padding:2px 6px;margin-top:2px;background:#0f0f1a;border-radius:3px;border-left:2px solid #3a5a7a}
 .panel-footer{font-size:0.7rem;padding:6px 14px;border-top:1px solid #2a2a4a;color:#666;max-height:80px;overflow-y:auto}
 .panel-footer .rt-entry{display:flex;justify-content:space-between;padding:1px 0}
 .panel-footer .rt-entry .rt-prefix{color:#888}
@@ -164,11 +165,14 @@ function updateAgentLog(agentId, log) {
   }
   el.innerHTML = log.map(e => {
     const act = (e.action || '').replace(/[^a-zA-Z0-9_]/g, '');
+    const result = e.result || '';
+    const hasResult = result.length > 0 && act !== 'NOT_FOUND';
     return `<div class="log-entry">
       <span class="time">${e.time || ''}</span>
       <span class="action ${act}">${e.action || ''}</span>
       <span class="detail">${e.detail || ''}</span>
       <div class="query-text">${(e.query || '').length > 40 ? (e.query || '').slice(0,38)+'..' : (e.query || '')}</div>
+      ${hasResult ? `<div class="log-result">${result.length > 100 ? result.slice(0,100)+'...' : result}</div>` : ''}
     </div>`;
   }).join('');
 }
